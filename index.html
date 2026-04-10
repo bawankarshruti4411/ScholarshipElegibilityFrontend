@@ -831,6 +831,29 @@
     transition: background 0.3s, color 0.3s;
     border: 1px solid transparent;
   }
+  .batch-weights-sync-btn {
+    font-size: 11px; color: var(--ink-3); background: none; border: none;
+    cursor: pointer; text-decoration: underline;
+    font-family: var(--font-body);
+  }
+  .batch-weights-sync-btn:hover { color: var(--ink); }
+
+    .batch-weight-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; }
+
+  .batch-weight-field { display: flex; flex-direction: column; gap: 3px; }
+  .batch-weight-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3); }
+  .batch-weight-input-wrap { position: relative; }
+  .batch-weight-input-wrap input { padding: 7px 22px 7px 8px; font-size: 13px; }
+  .batch-weight-suffix { position: absolute; right: 7px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--ink-3); pointer-events: none; }
+
+  .batch-weights-total-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--border);
+    font-size: 11px; color: var(--ink-3);
+  }
+  .batch-weights-total-val { font-weight: 600; }
+  .batch-weights-total-val.ok { color: var(--eligible); }
+  .batch-weights-total-val.warn { color: var(--accent); }
 
   .asi-weight-status.ok {
     background: var(--eligible-bg);
@@ -1170,7 +1193,54 @@
       (default weights 5/10/15/20/50% applied) &nbsp;|&nbsp;
       <strong>Legacy:</strong> <code>cgpa</code> (auto-converted to score)
     </p>
-
+    <!-- Batch weights -->
+    <div class="batch-weights-panel">
+      <div class="batch-weights-header">
+        <span class="batch-weights-title">Grade weightages for batch</span>
+        
+      </div>
+      <div class="batch-weight-grid">
+        <div class="batch-weight-field">
+          <div class="batch-weight-label">8th</div>
+          <div class="batch-weight-input-wrap">
+            <input type="number" id="bw-8" min="0" max="100" step="1" value="10" oninput="onBatchWeightChange()">
+            <span class="batch-weight-suffix">%</span>
+          </div>
+        </div>
+        <div class="batch-weight-field">
+          <div class="batch-weight-label">9th</div>
+          <div class="batch-weight-input-wrap">
+            <input type="number" id="bw-9" min="0" max="100" step="1" value="10" oninput="onBatchWeightChange()">
+            <span class="batch-weight-suffix">%</span>
+          </div>
+        </div>
+        <div class="batch-weight-field">
+          <div class="batch-weight-label">10th</div>
+          <div class="batch-weight-input-wrap">
+            <input type="number" id="bw-10" min="0" max="100" step="1" value="25" oninput="onBatchWeightChange()">
+            <span class="batch-weight-suffix">%</span>
+          </div>
+        </div>
+        <div class="batch-weight-field">
+          <div class="batch-weight-label">11th</div>
+          <div class="batch-weight-input-wrap">
+            <input type="number" id="bw-11" min="0" max="100" step="1" value="25" oninput="onBatchWeightChange()">
+            <span class="batch-weight-suffix">%</span>
+          </div>
+        </div>
+        <div class="batch-weight-field">
+          <div class="batch-weight-label">12th</div>
+          <div class="batch-weight-input-wrap">
+            <input type="number" id="bw-12" min="0" max="100" step="1" value="30" oninput="onBatchWeightChange()">
+            <span class="batch-weight-suffix">%</span>
+          </div>
+        </div>
+      </div>
+      <div class="batch-weights-total-row">
+        <span>Total</span>
+        <span class="batch-weights-total-val ok" id="bw-total">100%</span>
+      </div>
+    </div>
     <!-- Sample CSV download -->
     <div style="margin-bottom:1rem;">
       <button onclick="downloadSampleCSV()" style="
@@ -1379,6 +1449,128 @@ function showToast(msg, duration = 4000) {
   clearTimeout(t._tid);
   t._tid = setTimeout(() => t.classList.remove('visible'), duration);
 }
+
+/* ── Weight state ────────────────────────────────────────────── */
+const RAW_WEIGHTS = { 8: 10, 9: 10, 10: 25, 11: 25, 12: 30 };   // raw slider values (sum to 100)
+
+function getNormalisedWeights() {
+  const total = Object.values(RAW_WEIGHTS).reduce((a, b) => a + b, 0);
+  if (total === 0) return { class_8: 0.2, class_9: 0.2, class_10: 0.2, class_11: 0.2, class_12: 0.2 };
+  return {
+    class_8:  RAW_WEIGHTS[8]  / total,
+    class_9:  RAW_WEIGHTS[9]  / total,
+    class_10: RAW_WEIGHTS[10] / total,
+    class_11: RAW_WEIGHTS[11] / total,
+    class_12: RAW_WEIGHTS[12] / total,
+  };
+}
+
+function computeASI() {
+  const pcts = {
+    class_8_pct:  parseFloat(document.getElementById('inp-class8').value)  || 0,
+    class_9_pct:  parseFloat(document.getElementById('inp-class9').value)  || 0,
+    class_10_pct: parseFloat(document.getElementById('inp-class10').value) || 0,
+    class_11_pct: parseFloat(document.getElementById('inp-class11').value) || 0,
+    class_12_pct: parseFloat(document.getElementById('inp-class12').value) || 0,
+  };
+  const w = getNormalisedWeights();
+  const asi = pcts.class_8_pct  * w.class_8
+            + pcts.class_9_pct  * w.class_9
+            + pcts.class_10_pct * w.class_10
+            + pcts.class_11_pct * w.class_11
+            + pcts.class_12_pct * w.class_12;
+  return Math.max(0, Math.min(100, asi));
+}
+
+function updateASIDisplay() {
+  const asi = computeASI();
+  document.getElementById('asi-live').innerHTML = `${asi.toFixed(1)}<span>/100</span>`;
+}
+
+function updateWeightBar() {
+  const total = Object.values(RAW_WEIGHTS).reduce((a, b) => a + b, 0) || 1;
+  const grades = [8, 9, 10, 11, 12];
+  grades.forEach(g => {
+    const pct = (RAW_WEIGHTS[g] / total * 100).toFixed(1);
+    document.getElementById(`wseg-${g}`).style.width = pct + '%';
+    document.getElementById(`wlbl-${g}`).textContent = pct + '%';
+  });
+  // Update total display
+  const totalEl = document.getElementById('weight-total-display');
+  if (totalEl) {
+    totalEl.textContent = total + '%';
+    totalEl.className = 'total-val ' + (total === 100 ? 'ok' : 'warn');
+  }
+}
+
+function onWeightChange() {
+  const grades = [8, 9, 10, 11, 12];
+  grades.forEach(g => {
+    const val = parseInt(document.getElementById(`w-${g}`).value) || 0;
+    RAW_WEIGHTS[g] = val;
+    document.getElementById(`wval-${g}`).textContent = val + '%';
+  });
+  updateWeightBar();
+  updateASIDisplay();
+}
+
+function onGradeChange() {
+  // Validate range
+  const inputs = [
+    document.getElementById('inp-class8'),
+    document.getElementById('inp-class9'),
+    document.getElementById('inp-class10'),
+    document.getElementById('inp-class11'),
+    document.getElementById('inp-class12'),
+  ];
+  inputs.forEach(inp => {
+    const v = parseFloat(inp.value);
+    if (inp.value !== '' && (isNaN(v) || v < 0 || v > 100)) {
+      inp.classList.add('error');
+    } else {
+      inp.classList.remove('error');
+    }
+  });
+  updateASIDisplay();
+}
+
+function toggleWeights() {
+  const ctrl = document.getElementById('weight-controls');
+  const btn  = document.getElementById('weight-toggle');
+  ctrl.classList.toggle('open');
+  btn.classList.toggle('open');
+  btn.querySelector('span') && (btn.querySelector('span').textContent =
+    ctrl.classList.contains('open') ? 'Hide weightage controls' : 'Customise grade weightages');
+}
+
+/* ── Batch weight helpers ────────────────────────────────────── */
+function onBatchWeightChange() {
+  const vals = [8, 9, 10, 11, 12].map(g => parseFloat(document.getElementById(`bw-${g}`).value) || 0);
+  const total = vals.reduce((a, b) => a + b, 0);
+  const el = document.getElementById('bw-total');
+  el.textContent = total.toFixed(0) + '%';
+  el.className = 'batch-weights-total-val ' + (Math.abs(total - 100) < 0.5 ? 'ok' : 'warn');
+}
+
+function getBatchWeights() {
+  const grades = [8, 9, 10, 11, 12];
+  const raw = {};
+  let total = 0;
+  grades.forEach(g => {
+    const v = parseFloat(document.getElementById(`bw-${g}`).value) || 0;
+    raw[g] = v;
+    total += v;
+  });
+  if (total === 0) total = 1;
+  return {
+    class_8:  raw[8]  / total,
+    class_9:  raw[9]  / total,
+    class_10: raw[10] / total,
+    class_11: raw[11] / total,
+    class_12: raw[12] / total,
+  };
+}
+
 
 /* ── Health check + model info ───────────────────────────────── */
 async function init() {
