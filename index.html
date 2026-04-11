@@ -687,7 +687,7 @@
     position: fixed;
     bottom: 24px;
     right: 24px;
-    background: #c84b2f;
+    background: #30b52b;
     color: #fff;
     padding: 10px 16px;
     border-radius: var(--radius-sm);
@@ -831,6 +831,29 @@
     transition: background 0.3s, color 0.3s;
     border: 1px solid transparent;
   }
+  /* ── Batch section ────────────────────────────────────────── */
+  .batch-section { max-width: 1100px; margin: 0 auto; padding: 0 2rem 4rem; }
+  @media (max-width: 900px) { .batch-section { padding: 0 1.25rem 3rem; } }
+
+  .batch-divider { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); }
+  .batch-divider::before, .batch-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* Batch weights panel */
+  .batch-weights-panel {
+    background: var(--paper-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    margin-bottom: 1.1rem;
+  }
+
+  .batch-weights-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 0.75rem;
+  }
+
+  .batch-weights-title { font-size: 12px; font-weight: 600; color: var(--ink-2); }
+
   .batch-weights-sync-btn {
     font-size: 11px; color: var(--ink-3); background: none; border: none;
     cursor: pointer; text-decoration: underline;
@@ -974,9 +997,79 @@
       gap: 6px;
     }
   }
+
+  /* ── Category bonus controls ─────────────────────────────── */
+  .cat-bonus-section {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    margin-bottom: 1.1rem;
+  }
+
+  .cat-bonus-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 0.85rem;
+  }
+
+  .cat-bonus-title { font-size: 12px; font-weight: 600; color: var(--ink-2); }
+
+  .cat-bonus-reset-btn {
+    font-size: 11px; color: var(--ink-3); background: none; border: none;
+    cursor: pointer; font-family: var(--font-body); text-decoration: underline;
+  }
+  .cat-bonus-reset-btn:hover { color: var(--accent); }
+
+  .cat-bonus-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.5rem;
+  }
+
+  .cat-bonus-field { display: flex; flex-direction: column; gap: 3px; }
+
+  .cat-bonus-label {
+    font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .cat-bonus-label.sc  { color: #7c6fc4; }
+  .cat-bonus-label.st  { color: #5b8fd9; }
+  .cat-bonus-label.obc { color: #3aabac; }
+  .cat-bonus-label.gen { color: var(--ink-3); }
+  .cat-bonus-label.nri { color: var(--accent); }
+
+  .cat-bonus-input-wrap { position: relative; }
+  .cat-bonus-input-wrap input {
+    padding: 7px 24px 7px 8px; font-size: 13px;
+  }
+  .cat-bonus-input-wrap input.negative { color: var(--inelig); }
+  .cat-bonus-input-wrap input.positive { color: var(--eligible); }
+
+  .cat-bonus-pts {
+    position: absolute; right: 7px; top: 50%; transform: translateY(-50%);
+    font-size: 10px; color: var(--ink-3); pointer-events: none;
+  }
+
+  .cat-bonus-note {
+    font-size: 11px; color: var(--ink-3); margin-top: 0.5rem;
+    padding-top: 0.5rem; border-top: 1px solid var(--border);
+  }
+
+  /* Eligibility score display in result */
+  .elig-score-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(0,0,0,0.03);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    margin-bottom: 8px;
+  }
+  .elig-score-label { font-size: 12px; color: var(--ink-3); }
+  .elig-score-val   { font-family: var(--font-head); font-size: 1.1rem; color: var(--ink); }
+  .elig-score-threshold { font-size: 11px; color: var(--ink-3); margin-left: 6px; }
 </style>
 </head>
 <body>
+
 
 <!-- ── Header ──────────────────────────────────────────────────── -->
 <header>
@@ -992,7 +1085,7 @@
         <span class="dot" id="status-dot"></span>
         <span id="status-label">Connecting…</span>
       </span>
-      <span id="accuracy-badge" style="display:none; font-weight:500; color: var(--ink-2);">98.03% accuracy</span>
+      <span id="accuracy-badge" style="display:none; font-weight:500; color: var(--ink-2);">97.63% accuracy</span>
     </div>
   </div>
 </header>
@@ -1003,7 +1096,7 @@
     <h1 class="hero-title">Predict scholarship <em>eligibility</em> with ML</h1>
     <p class="hero-desc">Powered by a Random Forest model trained on 15,000 student records. SHAP explainability shows exactly why a student qualifies — or doesn't.</p>
     <div class="hero-stats">
-      <div class="hero-stat"><span class="val">98%</span><span class="lbl">Accuracy</span></div>
+      <div class="hero-stat"><span class="val">97.63%</span><span class="lbl">Accuracy</span></div>
       <div class="hero-stat"><span class="val">15K</span><span class="lbl">Training records</span></div>
       <div class="hero-stat"><span class="val">6</span><span class="lbl">Features used</span></div>
       <div class="hero-stat"><span class="val" id="elig-rate-hero">—</span><span class="lbl">Eligible rate</span></div>
@@ -1087,6 +1180,52 @@
         </div>
       </div>
       <!-- ══════════════════════════════════════════════════════════ -->
+
+        <!-- ── Category Bonus Controls ────────────────────────── -->
+      <div class="cat-bonus-section">
+        <div class="cat-bonus-header">
+          <span class="cat-bonus-title">Category bonus points</span>
+          <button class="cat-bonus-reset-btn" onclick="resetCategoryBonuses()">Reset to defaults</button>
+        </div>
+        <div class="cat-bonus-grid">
+          <div class="cat-bonus-field">
+            <div class="cat-bonus-label sc">SC</div>
+            <div class="cat-bonus-input-wrap">
+              <input type="number" id="cb-SC" value="20" step="1" oninput="onCatBonusChange(this)">
+              <span class="cat-bonus-pts">pts</span>
+            </div>
+          </div>
+          <div class="cat-bonus-field">
+            <div class="cat-bonus-label st">ST</div>
+            <div class="cat-bonus-input-wrap">
+              <input type="number" id="cb-ST" value="20" step="1" oninput="onCatBonusChange(this)">
+              <span class="cat-bonus-pts">pts</span>
+            </div>
+          </div>
+          <div class="cat-bonus-field">
+            <div class="cat-bonus-label obc">OBC</div>
+            <div class="cat-bonus-input-wrap">
+              <input type="number" id="cb-OBC" value="12" step="1" oninput="onCatBonusChange(this)">
+              <span class="cat-bonus-pts">pts</span>
+            </div>
+          </div>
+          <div class="cat-bonus-field">
+            <div class="cat-bonus-label gen">General</div>
+            <div class="cat-bonus-input-wrap">
+              <input type="number" id="cb-General" value="0" step="1" oninput="onCatBonusChange(this)">
+              <span class="cat-bonus-pts">pts</span>
+            </div>
+          </div>
+          <div class="cat-bonus-field">
+            <div class="cat-bonus-label nri">NRI</div>
+            <div class="cat-bonus-input-wrap">
+              <input type="number" id="cb-NRI" value="-10" step="1" oninput="onCatBonusChange(this)">
+              <span class="cat-bonus-pts">pts</span>
+            </div>
+          </div>
+        </div>
+        <div class="cat-bonus-note">Points added to eligibility score (threshold: 45). Positive = advantage, negative = penalty. Score is out of ~103 max.</div>
+      </div>
 
       <div class="field">
         <div class="field-label">
@@ -1193,11 +1332,10 @@
       (default weights 5/10/15/20/50% applied) &nbsp;|&nbsp;
       <strong>Legacy:</strong> <code>cgpa</code> (auto-converted to score)
     </p>
-    <!-- Batch weights -->
+   <!-- Batch weights -->
     <div class="batch-weights-panel">
       <div class="batch-weights-header">
         <span class="batch-weights-title">Grade weightages for batch</span>
-        
       </div>
       <div class="batch-weight-grid">
         <div class="batch-weight-field">
@@ -1241,6 +1379,51 @@
         <span class="batch-weights-total-val ok" id="bw-total">100%</span>
       </div>
     </div>
+
+     <!-- Batch category bonuses -->
+    <div class="batch-weights-panel" style="margin-bottom:1rem;">
+      <div class="batch-weights-header">
+        <span class="batch-weights-title">Category bonus points for batch</span>
+      </div>
+      <div class="batch-weight-grid">
+        <div class="batch-weight-field">
+          <div class="batch-weight-label" style="color:#7c6fc4">SC</div>
+          <div class="batch-weight-input-wrap">
+            <input type="number" id="bcb-SC" value="20" step="1" oninput="onBatchCatBonusChange()">
+            <span class="batch-weight-suffix">pts</span>
+          </div>
+        </div>
+        <div class="batch-weight-field">
+          <div class="batch-weight-label" style="color:#5b8fd9">ST</div>
+          <div class="batch-weight-input-wrap">
+            <input type="number" id="bcb-ST" value="20" step="1">
+            <span class="batch-weight-suffix">pts</span>
+          </div>
+        </div>
+        <div class="batch-weight-field">
+          <div class="batch-weight-label" style="color:#3aabac">OBC</div>
+          <div class="batch-weight-input-wrap">
+            <input type="number" id="bcb-OBC" value="12" step="1">
+            <span class="batch-weight-suffix">pts</span>
+          </div>
+        </div>
+        <div class="batch-weight-field">
+          <div class="batch-weight-label">General</div>
+          <div class="batch-weight-input-wrap">
+            <input type="number" id="bcb-General" value="0" step="1">
+            <span class="batch-weight-suffix">pts</span>
+          </div>
+        </div>
+        <div class="batch-weight-field">
+          <div class="batch-weight-label" style="color:var(--accent)">NRI</div>
+          <div class="batch-weight-input-wrap">
+            <input type="number" id="bcb-NRI" value="-10" step="1">
+            <span class="batch-weight-suffix">pts</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Sample CSV download -->
     <div style="margin-bottom:1rem;">
       <button onclick="downloadSampleCSV()" style="
@@ -1450,6 +1633,7 @@ function showToast(msg, duration = 4000) {
   t._tid = setTimeout(() => t.classList.remove('visible'), duration);
 }
 
+
 /* ── Weight state ────────────────────────────────────────────── */
 const RAW_WEIGHTS = { 8: 10, 9: 10, 10: 25, 11: 25, 12: 30 };   // raw slider values (sum to 100)
 
@@ -1543,6 +1727,29 @@ function toggleWeights() {
     ctrl.classList.contains('open') ? 'Hide weightage controls' : 'Customise grade weightages');
 }
 
+/* ── Category bonus helpers ──────────────────────────────────── */
+const DEFAULT_CAT_BONUSES = { SC: 20, ST: 20, OBC: 12, General: 0, NRI: -10 };
+
+
+function onCatBonusChange(input) {
+  const v = parseFloat(input.value);
+  if (!isNaN(v)) {
+    input.classList.toggle('negative', v < 0);
+    input.classList.toggle('positive', v > 0);
+  }
+}
+
+function resetCategoryBonuses() {
+  Object.entries(DEFAULT_CAT_BONUSES).forEach(([cat, val]) => {
+    const inp = document.getElementById(`cb-${cat}`);
+    if (inp) {
+      inp.value = val;
+      onCatBonusChange(inp);
+    }
+  });
+  showToast('Category bonuses reset to defaults.', 2000);
+}
+
 /* ── Batch weight helpers ────────────────────────────────────── */
 function onBatchWeightChange() {
   const vals = [8, 9, 10, 11, 12].map(g => parseFloat(document.getElementById(`bw-${g}`).value) || 0);
@@ -1550,25 +1757,6 @@ function onBatchWeightChange() {
   const el = document.getElementById('bw-total');
   el.textContent = total.toFixed(0) + '%';
   el.className = 'batch-weights-total-val ' + (Math.abs(total - 100) < 0.5 ? 'ok' : 'warn');
-}
-
-function getBatchWeights() {
-  const grades = [8, 9, 10, 11, 12];
-  const raw = {};
-  let total = 0;
-  grades.forEach(g => {
-    const v = parseFloat(document.getElementById(`bw-${g}`).value) || 0;
-    raw[g] = v;
-    total += v;
-  });
-  if (total === 0) total = 1;
-  return {
-    class_8:  raw[8]  / total,
-    class_9:  raw[9]  / total,
-    class_10: raw[10] / total,
-    class_11: raw[11] / total,
-    class_12: raw[12] / total,
-  };
 }
 
 
