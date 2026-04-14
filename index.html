@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1328,9 +1328,8 @@
     <p style="font-size:13px; color:var(--ink-3); margin-bottom:0.5rem;">
       CSV must have columns: <code>gender, location, category, parents_income, age</code><br>
       Plus academic score — <strong>Option A:</strong> <code>academic_score</code> (0–100) &nbsp;|&nbsp;
-      <strong>Option B:</strong> <code>class_8_pct, class_9_pct, class_10_pct, class_11_pct, class_12_pct</code>
-      (default weights 5/10/15/20/50% applied) &nbsp;|&nbsp;
-      <strong>Legacy:</strong> <code>cgpa</code> (auto-converted to score)
+      <strong>Option B:</strong> <code>class_8_pct, class_9_pct, class_10_pct, class_11_pct, class_12_pct, class_CGPA</code>
+      (default weights 5/10/15/20/20/30% applied) &nbsp;|&nbsp;
     </p>
    <!-- Batch weights -->
     <div class="batch-weights-panel">
@@ -1373,12 +1372,39 @@
             <span class="batch-weight-suffix">%</span>
           </div>
         </div>
+        <div class="batch-weight-field">
+          <div class="batch-weight-label">CGPA</div>
+          <div class="batch-weight-input-wrap">
+            <input type="number" id="bw-CGPA" min="0" max="100" step="1" value="30" oninput="onBatchWeightChange()">
+            <span class="batch-weight-suffix">%</span>
+          </div>
+        </div>
       </div>
       <div class="batch-weights-total-row">
         <span>Total</span>
         <span class="batch-weights-total-val ok" id="bw-total">100%</span>
       </div>
     </div>
+    <!-- Score display -->
+        <div class="asi-display">
+          <div class="asi-display-left">
+            <div class="asi-display-label">Weighted academic score</div>
+            <div class="asi-display-score" id="batch-asi-score-display">—</div>
+            <div class="asi-display-sub">out of 100</div>
+          </div>
+          <div class="asi-score-bar-wrap">
+            <div class="asi-score-bar-track">
+              <div class="asi-score-bar-fill" id="batch-asi-score-bar"></div>
+            </div>
+            <div style="font-size:10px; color:rgba(250,249,247,0.3); margin-top:2px;">score</div>
+          </div>
+        </div>
+
+        <!-- Weight validation status -->
+        <div class="asi-weight-status ok" id="batch-asi-weight-status">
+          <div class="asi-weight-status-dot"></div>
+          <span id="asi-weight-status-txt">Weights sum to 100% ✓</span>
+        </div>
 
      <!-- Batch category bonuses -->
     <div class="batch-weights-panel" style="margin-bottom:1rem;">
@@ -1423,6 +1449,26 @@
         </div>
       </div>
     </div>
+<!-- Score display -->
+        <div class="asi-display">
+          <div class="asi-display-left">
+            <div class="asi-display-label">Weighted Category</div>
+            <div class="asi-display-score" id="asi-score-display">—</div>
+            <div class="asi-display-sub">out of 100</div>
+          </div>
+          <div class="asi-score-bar-wrap">
+            <div class="asi-score-bar-track">
+              <div class="asi-score-bar-fill" id="asi-score-bar"></div>
+            </div>
+            <div style="font-size:10px; color:rgba(250,249,247,0.3); margin-top:2px;">score</div>
+          </div>
+        </div>
+
+        <!-- Weight validation status -->
+        <div class="asi-weight-status ok" id="asi-weight-status">
+          <div class="asi-weight-status-dot"></div>
+          <span id="asi-weight-status-txt">Weights sum to 100% ✓</span>
+        </div>
 
     <!-- Sample CSV download -->
     <div style="margin-bottom:1rem;">
@@ -1487,12 +1533,12 @@ const API = "https://scholarshipeligibilitypredictionmodel-l3oc.onrender.com";
    ══════════════════════════════════════════════════════════════════ */
 const ASI = (() => {
   // Default weights (must sum to 1.0)
-  const DEFAULT_WEIGHTS = [0.05, 0.10, 0.15, 0.20, 0.50];
-  const CLASS_LABELS    = ['8th', '9th', '10th', '11th', '12th'];
-  const CLASS_IDS       = ['8', '9', '10', '11', '12'];
+  const DEFAULT_WEIGHTS = [0.05, 0.10, 0.15, 0.20, 0.20, 0.30];
+  const CLASS_LABELS    = ['8th', '9th', '10th', '11th', '12th', 'CGPA'];
+  const CLASS_IDS       = ['8', '9', '10', '11', '12','CGPA'];
 
   // State
-  let percentages = [75, 78, 82, 80, 85];
+  let percentages = [75, 78, 82, 80, 85,8];
   let weights     = [...DEFAULT_WEIGHTS];
 
   function clampPct(v)  { return Math.max(0, Math.min(100, +v || 0)); }
@@ -1500,7 +1546,7 @@ const ASI = (() => {
 
   function computeScore() {
     let s = 0;
-    for (let i = 0; i < 5; i++) s += percentages[i] * weights[i];
+    for (let i = 0; i < 6; i++) s += percentages[i] * weights[i];
     return Math.round(s * 100) / 100;
   }
 
@@ -1577,7 +1623,7 @@ const ASI = (() => {
 
   function resetWeights() {
     weights = [...DEFAULT_WEIGHTS];
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 6; i++) {
       document.getElementById(`asi-wslider-${i}`).value = Math.round(weights[i] * 100);
       document.getElementById(`asi-wval-${i}`).textContent = Math.round(weights[i] * 100) + '%';
     }
@@ -1585,8 +1631,8 @@ const ASI = (() => {
   }
 
   function equalWeights() {
-    weights = [0.20, 0.20, 0.20, 0.20, 0.20];
-    for (let i = 0; i < 5; i++) {
+    weights = [0.167,0.167,0.167,0.167,0.167,0.167];
+    for (let i = 0; i < 6; i++) {
       document.getElementById(`asi-wslider-${i}`).value = 20;
       document.getElementById(`asi-wval-${i}`).textContent = '20%';
     }
@@ -1605,12 +1651,14 @@ const ASI = (() => {
       class_10_pct: percentages[2],
       class_11_pct: percentages[3],
       class_12_pct: percentages[4],
+      CGPA_pct: percentages[5],
       weights: {
         class_8:  weights[0],
         class_9:  weights[1],
         class_10: weights[2],
         class_11: weights[3],
         class_12: weights[4],
+        CGPA: weights[5],
       }
     };
   }
@@ -1635,36 +1683,23 @@ function showToast(msg, duration = 4000) {
 
 
 /* ── Weight state ────────────────────────────────────────────── */
-const RAW_WEIGHTS = { 8: 10, 9: 10, 10: 25, 11: 25, 12: 30 };   // raw slider values (sum to 100)
+const RAW_WEIGHTS = { 8: 5, 9: 10 , 10: 15, 11: 20, 12: 30 ,CGPA:20 };   // raw slider values (sum to 100)
 
 function getNormalisedWeights() {
   const total = Object.values(RAW_WEIGHTS).reduce((a, b) => a + b, 0);
-  if (total === 0) return { class_8: 0.2, class_9: 0.2, class_10: 0.2, class_11: 0.2, class_12: 0.2 };
+  if (total === 0) return { class_8: 0.167, class_9: 0.167, class_10: 0.167, class_11: 0.167, class_12: 0.167 , CGPA: 0.167};
   return {
     class_8:  RAW_WEIGHTS[8]  / total,
     class_9:  RAW_WEIGHTS[9]  / total,
     class_10: RAW_WEIGHTS[10] / total,
     class_11: RAW_WEIGHTS[11] / total,
     class_12: RAW_WEIGHTS[12] / total,
+    CGPA: RAW_WEIGHTS["CGPA"] / total,
+
   };
 }
 
-function computeASI() {
-  const pcts = {
-    class_8_pct:  parseFloat(document.getElementById('inp-class8').value)  || 0,
-    class_9_pct:  parseFloat(document.getElementById('inp-class9').value)  || 0,
-    class_10_pct: parseFloat(document.getElementById('inp-class10').value) || 0,
-    class_11_pct: parseFloat(document.getElementById('inp-class11').value) || 0,
-    class_12_pct: parseFloat(document.getElementById('inp-class12').value) || 0,
-  };
-  const w = getNormalisedWeights();
-  const asi = pcts.class_8_pct  * w.class_8
-            + pcts.class_9_pct  * w.class_9
-            + pcts.class_10_pct * w.class_10
-            + pcts.class_11_pct * w.class_11
-            + pcts.class_12_pct * w.class_12;
-  return Math.max(0, Math.min(100, asi));
-}
+
 
 function updateASIDisplay() {
   const asi = computeASI();
@@ -1673,7 +1708,7 @@ function updateASIDisplay() {
 
 function updateWeightBar() {
   const total = Object.values(RAW_WEIGHTS).reduce((a, b) => a + b, 0) || 1;
-  const grades = [8, 9, 10, 11, 12];
+  const grades = [8, 9, 10, 11, 12,CGPA];
   grades.forEach(g => {
     const pct = (RAW_WEIGHTS[g] / total * 100).toFixed(1);
     document.getElementById(`wseg-${g}`).style.width = pct + '%';
@@ -1688,7 +1723,7 @@ function updateWeightBar() {
 }
 
 function onWeightChange() {
-  const grades = [8, 9, 10, 11, 12];
+  const grades = [8, 9, 10, 11, 12,CGPA];
   grades.forEach(g => {
     const val = parseInt(document.getElementById(`w-${g}`).value) || 0;
     RAW_WEIGHTS[g] = val;
@@ -1706,6 +1741,7 @@ function onGradeChange() {
     document.getElementById('inp-class10'),
     document.getElementById('inp-class11'),
     document.getElementById('inp-class12'),
+    document.getElementById('inp-CGPA'),
   ];
   inputs.forEach(inp => {
     const v = parseFloat(inp.value);
@@ -1752,7 +1788,7 @@ function resetCategoryBonuses() {
 
 /* ── Batch weight helpers ────────────────────────────────────── */
 function onBatchWeightChange() {
-  const vals = [8, 9, 10, 11, 12].map(g => parseFloat(document.getElementById(`bw-${g}`).value) || 0);
+  const vals = [8, 9, 10, 11, 12,CGPA].map(g => parseFloat(document.getElementById(`bw-${g}`).value) || 0);
   const total = vals.reduce((a, b) => a + b, 0);
   const el = document.getElementById('bw-total');
   el.textContent = total.toFixed(0) + '%';
@@ -1996,16 +2032,16 @@ function renderBatch(data) {
 
 /* ── Sample CSV download ─────────────────────────────────────── */
 function downloadSampleCSV() {
-  const header = 'gender,location,category,class_8_pct,class_9_pct,class_10_pct,class_11_pct,class_12_pct,parents_income,age';
+  const header = 'gender,location,category,class_8_pct,class_9_pct,class_10_pct,class_11_pct,class_12_pct,CGPA,parents_income,age';
   const rows = [
-    'female,rural,SC,82,85,88,84,90,80000,19',
-    'male,urban,General,70,72,75,68,74,200000,22',
-    'female,rural,OBC,78,80,83,81,87,100000,20',
-    'male,rural,ST,88,90,92,89,94,60000,18',
-    'other,urban,NRI,65,68,70,67,72,280000,25',
-    'female,urban,General,55,58,60,54,62,250000,23',
-    'male,rural,OBC,76,79,82,77,85,110000,21',
-    'female,rural,SC,90,88,92,91,95,50000,19',
+    'female,rural,SC,82,85,88,84,90,60,80000,19',
+    'male,urban,General,70,72,75,68,74,75,200000,22',
+    'female,rural,OBC,78,80,83,81,87,58,100000,20',
+    'male,rural,ST,88,90,92,89,94,84,60000,18',
+    'other,urban,NRI,65,68,70,67,72,76,280000,25',
+    'female,urban,General,55,58,60,54,62,4,250000,23',
+    'male,rural,OBC,76,79,82,77,85,85,110000,21',
+    'female,rural,SC,90,88,92,91,95,93,50000,19',
   ];
   const csv  = [header, ...rows].join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
